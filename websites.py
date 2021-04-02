@@ -4,6 +4,7 @@ import configparser
 import datetime
 import os
 import json
+from database import save_snapshot
 
 def read_config(section='DEFAULT'):
     config = configparser.ConfigParser()
@@ -128,10 +129,12 @@ class Website(object):
     @property
     def metadata(self):
         metadata = {
+            'name': self.name,
             'queried_url': self.url,
-            'reached_url': getattr(self, 'true_url', None),
+            'scraped_url': getattr(self, 'true_url', None),
             'scrape_time': self.scrape_time.strftime(CONFIG['datetime_folder_format']),
-            'logs': self.logs
+            'logs': self.logs,
+            'folder_path': self.data_folder
         }
 
         if getattr(self, 'source_code_saved', False):
@@ -149,6 +152,9 @@ class Website(object):
     def save_metadata(self):
         with open(self.data_folder + CONFIG['metadata_filename'], 'w') as f:
             json.dump(self.metadata, f)
+    
+    def save_to_db(self):
+        save_snapshot(self.metadata)
 
 
     def get_folder_path(self) -> str:

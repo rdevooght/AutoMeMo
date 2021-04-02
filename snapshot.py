@@ -33,6 +33,7 @@ def main():
             website.take_screenshot()
         
         website.save_metadata()
+        website.save_to_db()
 
     driver.quit()
     
