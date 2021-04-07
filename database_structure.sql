@@ -6,5 +6,6 @@ CREATE TABLE IF NOT EXISTS snapshots (
     snapshot_date DATETIME,
     path_to_source TEXT,
     path_to_screenshot TEXT,
+    path_to_archive TEXT,
     metadata TEXT
 );

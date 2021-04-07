@@ -126,6 +126,13 @@ class Website(object):
         self.driver.save_screenshot(self.data_folder + self.screenshot_filename)
         self.screenshot_taken = True
     
+    def save_mhtml_archive(self):
+        res = self.driver.execute_cdp_cmd('Page.captureSnapshot', {'format': 'mhtml'})
+        self.mhtml_filename = CONFIG['mhtml_archive_filename']
+        with open(self.data_folder+self.mhtml_filename, 'w') as f:
+            f.write(res['data'])
+        self.mhtml_archive_saved = True
+    
     @property
     def metadata(self):
         metadata = {
@@ -147,6 +154,11 @@ class Website(object):
         else:
             metadata['screenshot'] = {'saved': False, 'filename': None}
         
+        if getattr(self, 'mhtml_archived_saved', False):
+            metadata['mhtml_archive'] = {'saved': True, 'filename': self.mhtml_filename}
+        else:
+            metadata['mhtml_archive'] = {'saved': False, 'filename': None}
+
         return metadata
     
     def save_metadata(self):

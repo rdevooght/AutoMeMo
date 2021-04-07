@@ -17,19 +17,20 @@ def save_snapshot(metadata) -> str:
 
     path_to_source = metadata['folder_path']+metadata['source']['filename'] if metadata['source']['saved'] else None
     path_to_screenshot = metadata['folder_path']+metadata['screenshot']['filename'] if metadata['screenshot']['saved'] else None
+    path_to_archive = metadata['folder_path']+metadata['mhtml_archive']['filename'] if metadata['mhtml_archive']['saved'] else None
     
     values = (
         metadata['name'], metadata['queried_url'], metadata['scraped_url'],
-        path_to_source, path_to_screenshot, metadata['scrape_time'],
+        path_to_source, path_to_screenshot, path_to_archive, metadata['scrape_time'],
         json.dumps(metadata)
     )
     
     con = sqlite3.connect(CONFIG['path_to_db'])
     cursor = con.cursor()
     query = '''INSERT INTO snapshots(
-        website_name, queried_url, scraped_url, path_to_source, path_to_screenshot,
+        website_name, queried_url, scraped_url, path_to_source, path_to_screenshot, path_to_archive,
         snapshot_date, metadata
-    ) VALUES (?,?,?,?,?,?,?)
+    ) VALUES (?,?,?,?,?,?,?,?)
     '''
     cursor.execute(query, values)
 

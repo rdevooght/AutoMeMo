@@ -6,6 +6,7 @@ import websites as websites
 def get_arguments():
     parser = argparse.ArgumentParser()
     parser.add_argument('-s', '--screenshot', dest='take_screenshot', default=False, action='store_true', help='Take a screenshot of the page')
+    parser.add_argument('-a', '--archive', dest='save_archive', default=False, action='store_true', help='Save a full archive of the page')
     parser.add_argument('--defaults', dest='default_websites', default=False, action='store_true', help='Add all default websites to the list of urls')
     parser.add_argument('urls', nargs='*', help='List of urls to scrape')
     return parser.parse_args()
@@ -31,6 +32,9 @@ def main():
         website.save_source()
         if args.take_screenshot:
             website.take_screenshot()
+        
+        if args.save_archive:
+            website.save_mhtml_archive()
         
         website.save_metadata()
         website.save_to_db()
