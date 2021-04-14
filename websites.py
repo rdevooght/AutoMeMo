@@ -4,6 +4,7 @@ import configparser
 import datetime
 import os
 import json
+import re
 from database import save_snapshot
 
 def read_config(section='DEFAULT'):
@@ -205,7 +206,55 @@ class RTBF(Website):
         else:
             self.logs.append("Multiple matches for RTBF GDPR popup")
 
+class DPGMedia(Website):
+    '''
+    DPG media websites (de morgen and het laatste news) need a special handling of GDPR popups
+    '''
 
+    def _find_dpg_media_gdpr_button(self):
+        for b in self.driver.find_elements_by_tag_name('button'):
+            if b.text == 'Akkoord':
+                return b
+        return None
+
+    def _GDPR_popup(self):
+        popup_button = self._find_dpg_media_gdpr_button()
+        
+        
+        if popup_button is not None:
+            popup_button.click()
+            self.logs.append("Clicked DPG Media GDPR popup")
+        else:
+            # look for the button in iframes
+            iframes = self.driver.find_elements(By.XPATH, "//iframe")
+            iframe = None
+            for f in iframes:
+                if f.get_attribute('id').startswith('sp_message_iframe'):
+                    iframe = f
+                    break
+            
+            if iframe is not None:
+                self.driver.switch_to.frame(iframe)
+                popup_button = self._find_dpg_media_gdpr_button()
+
+                if popup_button is not None:
+                    popup_button.click()
+                    self.logs.append("Clicked DPG Media GDPR popup in iframe")
+                else:
+                    self.logs.append("Did not find DPG Media GDPR button")
+                
+                self.driver.switch_to.parent_frame()
+            else:
+                # if still not found, try looking for the accept url in the source code and go there
+                
+                source = str(self.driver.page_source.encode("utf-8"))
+                m = re.findall(r"https://www\.demorgen\.be/privacy-wall/accept\?redirectUri=.+&authId=[a-z0-9-]+", source)
+                if len(m) == 1:
+                    self.driver.get(m[0])
+                    self.logs.append('Redirect using source code of dpg media screen')
+                else:
+                    self.logs.append('No solution found for DPG media gdpr screen')
+                
 
 KNOWN_WEBSITES = {
     'https://www.lesoir.be': None,
@@ -217,7 +266,7 @@ KNOWN_WEBSITES = {
     'https://www.vrt.be': VRT,
     'https://www.standaard.be': None,
     'https://www.tijd.be': None,
-    #'https://www.hln.be': None, # Needs a way to handle DPGmedia popup
-    #'https://www.demorgen.be/': None, # Needs a way to handle DPGmedia popup
+    'https://www.hln.be': DPGMedia,
+    'https://www.demorgen.be/': DPGMedia,
     'https://www.nieuwsblad.be': None
 }
