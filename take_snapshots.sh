@@ -8,7 +8,9 @@ export WORKON_HOME=$HOME/.virtualenvs
 export VIRTUALENVWRAPPER_PYTHON=$HOME/.local/pipx/venvs/virtualenvwrapper/bin/python3
 source $HOME/.local/bin/virtualenvwrapper.sh
 
+# select the right python virtuel environment
 workon news-snapshots
+
 if [ $# -eq 0 ]; then
     python snapshot.py --defaults
 elif [ $1 == "full_archive" ]; then
