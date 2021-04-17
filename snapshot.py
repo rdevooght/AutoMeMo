@@ -2,6 +2,7 @@ from selenium import webdriver
 import argparse
 import configparser
 import websites as websites
+from database_and_logging import save_failure
 
 def get_arguments():
     parser = argparse.ArgumentParser()
@@ -27,17 +28,20 @@ def main():
     for i, url in enumerate(args.urls):
         print("Scrape "+ url+" ("+str(i+1)+"/"+str(len(args.urls))+")")
         website = websites.get_website_object(url)
-        website.set_driver(driver)
-        website.load_page()
-        website.save_source()
-        if args.take_screenshot:
-            website.take_screenshot()
-        
-        if args.save_archive:
-            website.save_mhtml_archive()
-        
-        website.save_metadata()
-        website.save_to_db()
+        try:
+            website.set_driver(driver)
+            website.load_page()
+            website.save_source()
+            if args.take_screenshot:
+                website.take_screenshot()
+            
+            if args.save_archive:
+                website.save_mhtml_archive()
+            
+            website.save_metadata()
+            website.save_to_db()
+        except Exception as e:
+            save_failure(website, e)
 
     driver.quit()
     

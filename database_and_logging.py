@@ -1,6 +1,7 @@
 import sqlite3
 import configparser
 import json
+import logging
 
 def read_config(section='DEFAULT'):
     config = configparser.ConfigParser()
@@ -8,6 +9,7 @@ def read_config(section='DEFAULT'):
     return config['DEFAULT']
 
 CONFIG = read_config()
+logging.basicConfig(filename=CONFIG['logs_folder']+'logs.log')
 
 def save_snapshot(metadata) -> str:
     '''
@@ -41,3 +43,12 @@ def save_snapshot(metadata) -> str:
     con.close()
 
     return snapshot_id
+
+def save_failure(website, exception):
+    '''
+    Takes in a website object and an exception, and saves a log of the failed scraping with the traceback
+    '''
+
+    logging.error('Failed scraping of %s at %s', website.name, website.scrape_time)
+    logging.exception(exception)
+

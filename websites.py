@@ -5,7 +5,7 @@ import datetime
 import os
 import json
 import re
-from database import save_snapshot
+from database_and_logging import save_snapshot
 
 def read_config(section='DEFAULT'):
     config = configparser.ConfigParser()
