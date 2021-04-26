@@ -7,5 +7,6 @@ CREATE TABLE IF NOT EXISTS snapshots (
     path_to_source TEXT,
     path_to_screenshot TEXT,
     path_to_archive TEXT,
+    failed INTEGER DEFAULT 0
     metadata TEXT
 );

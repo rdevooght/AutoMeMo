@@ -21,9 +21,18 @@ def save_snapshot(metadata) -> str:
     path_to_screenshot = metadata['folder_path']+metadata['screenshot']['filename'] if metadata['screenshot']['saved'] else None
     path_to_archive = metadata['folder_path']+metadata['mhtml_archive']['filename'] if metadata['mhtml_archive']['saved'] else None
     
+    # Check in the logs if something failed
+    # We want to reccord that in a distinct field in the DB to spot it more easily
+    failed = False
+    if 'logs' in metadata:
+        for l in metadata['logs']:
+            if isinstance(l, dict) and 'Exception' in l:
+                failed = True
+                break
+
     values = (
         metadata['name'], metadata['queried_url'], metadata['scraped_url'],
-        path_to_source, path_to_screenshot, path_to_archive, metadata['scrape_time'],
+        path_to_source, path_to_screenshot, path_to_archive, metadata['scrape_time'], failed,
         json.dumps(metadata)
     )
     
@@ -31,8 +40,8 @@ def save_snapshot(metadata) -> str:
     cursor = con.cursor()
     query = '''INSERT INTO snapshots(
         website_name, queried_url, scraped_url, path_to_source, path_to_screenshot, path_to_archive,
-        snapshot_date, metadata
-    ) VALUES (?,?,?,?,?,?,?,?)
+        snapshot_date, failed, metadata
+    ) VALUES (?,?,?,?,?,?,?,?,?)
     '''
     cursor.execute(query, values)
 

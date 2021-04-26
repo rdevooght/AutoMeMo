@@ -30,16 +30,7 @@ def main():
         website = websites.get_website_object(url)
         try:
             website.set_driver(driver)
-            website.load_page()
-            website.save_source()
-            if args.take_screenshot:
-                website.take_screenshot()
-            
-            if args.save_archive:
-                website.save_mhtml_archive()
-            
-            website.save_metadata()
-            website.save_to_db()
+            website.run(save_source=True, save_screenshot=args.take_screenshot, save_archive=args.save_archive)
         except Exception as e:
             save_failure(website, e)
 

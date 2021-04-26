@@ -5,6 +5,7 @@ import datetime
 import os
 import json
 import re
+import traceback
 from database_and_logging import save_snapshot
 
 def read_config(section='DEFAULT'):
@@ -79,6 +80,44 @@ class Website(object):
     
     def set_driver(self, driver):
         self.driver = driver
+    
+    def try_or_log(self, method):
+        '''
+        Fail-save way to call a method of the website object.
+        If an exception is raised during the excecution of the method, the traceback is saved in the logs, but the process doesn't stop.
+        '''
+        try:
+            getattr(self, method)()
+        except Exception as e:
+            self.log({
+                'Exception': getattr(e, 'message', repr(e)),
+                'When': method,
+                'traceback': traceback.format_exc()
+            })
+    
+    def run(self, save_source=True, save_screenshot=False, save_archive=False):
+        '''
+        Scrape the website, saves the results on disk and writes logs in a db
+        '''
+        self.try_or_log('load_page')            
+
+        if self.state == 'page_loaded':
+
+            if save_source:
+                self.try_or_log('save_source')
+            
+            if save_screenshot:
+                self.try_or_log('take_screenshot')
+            
+            if save_archive:
+                self.try_or_log('save_mhtml_archive')
+        
+            # if something succeeded, save metadata in a file
+            if self.metadata['source']['saved'] or self.metadata['screenshot']['saved'] or self.metadata['mhtml_archive']['saved']:
+                self.try_or_log('save_metadata')
+
+        # Always save the run to the db
+        self.save_to_db()
 
     def get_website_name(self) -> str:
         '''
@@ -128,12 +167,16 @@ class Website(object):
         self.screenshot_taken = True
     
     def save_mhtml_archive(self):
+        self.reach_state('page_loaded')
         res = self.driver.execute_cdp_cmd('Page.captureSnapshot', {'format': 'mhtml'})
         self.mhtml_filename = CONFIG['mhtml_archive_filename']
         with open(self.data_folder+self.mhtml_filename, 'w') as f:
             f.write(res['data'])
         self.mhtml_archive_saved = True
     
+    def log(self, new_log):
+        self.logs.append(new_log)
+
     @property
     def metadata(self):
         metadata = {
@@ -265,11 +308,10 @@ class DPGMedia(Website):
                 source = str(self.driver.page_source.encode("utf-8"))
                 m = re.findall(r"(https://www\.(demorgen|hln)\.be/privacy-(wall|gate)/accept(-tcf2)?\?redirectUri=.+&authId=[a-z0-9-]+)", source)
                 if len(m) == 1:
-                    print(m[0])
                     self.driver.get(m[0][0])
                     self.logs.append('Redirect using source code of dpg media screen')
                 else:
-                    self.logs.append('No solution found for DPG media gdpr screen')
+                    raise Exception('No solution found for DPG media gdpr screen')
                 
 
 KNOWN_WEBSITES = {
