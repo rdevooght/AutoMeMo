@@ -155,7 +155,7 @@ class Website(object):
         else:
             metadata['screenshot'] = {'saved': False, 'filename': None}
         
-        if getattr(self, 'mhtml_archived_saved', False):
+        if getattr(self, 'mhtml_archive_saved', False):
             metadata['mhtml_archive'] = {'saved': True, 'filename': self.mhtml_filename}
         else:
             metadata['mhtml_archive'] = {'saved': False, 'filename': None}
