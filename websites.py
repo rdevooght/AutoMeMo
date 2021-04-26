@@ -206,6 +206,21 @@ class RTBF(Website):
         else:
             self.logs.append("Multiple matches for RTBF GDPR popup")
 
+class Bruzz(Website):
+    '''
+    bruzz.be needs a specialized class for its GDPR popup
+    '''
+
+    def _GDPR_popup(self):
+        elements = self.driver.find_elements_by_class_name('cmpboxbtnyes')
+        if len(elements) == 1:
+            self.logs.append("Clicked Bruzz GDPR popup")
+            elements[0].click()
+        elif len(elements) == 0:
+            self.logs.append("No Bruzz GDPR popup")
+        else:
+            self.logs.append("Multiple matches for Bruzz GDPR popup")
+
 class DPGMedia(Website):
     '''
     DPG media websites (de morgen and het laatste news) need a special handling of GDPR popups
@@ -248,9 +263,10 @@ class DPGMedia(Website):
                 # if still not found, try looking for the accept url in the source code and go there
                 
                 source = str(self.driver.page_source.encode("utf-8"))
-                m = re.findall(r"https://www\.demorgen\.be/privacy-wall/accept\?redirectUri=.+&authId=[a-z0-9-]+", source)
+                m = re.findall(r"(https://www\.(demorgen|hln)\.be/privacy-(wall|gate)/accept(-tcf2)?\?redirectUri=.+&authId=[a-z0-9-]+)", source)
                 if len(m) == 1:
-                    self.driver.get(m[0])
+                    print(m[0])
+                    self.driver.get(m[0][0])
                     self.logs.append('Redirect using source code of dpg media screen')
                 else:
                     self.logs.append('No solution found for DPG media gdpr screen')
@@ -263,10 +279,17 @@ KNOWN_WEBSITES = {
     'https://www.dhnet.be': None,
     'https://www.rtl.be/info/': None,
     'https://www.lecho.be': None,
-    'https://www.vrt.be': VRT,
+    'https://www.lavenir.net/': None,
+    'https://www.sudinfo.be/': None,
+    'https://www.lacapitale.be/': None,
+    'https://www.vrt.be/vrtnws/nl': VRT,
     'https://www.standaard.be': None,
     'https://www.tijd.be': None,
     'https://www.hln.be': DPGMedia,
     'https://www.demorgen.be/': DPGMedia,
-    'https://www.nieuwsblad.be': None
+    'https://www.nieuwsblad.be': None,
+    'https://www.hbvl.be/': None,
+    'https://www.gva.be/': None,
+    'https://www.knack.be/': None,
+    'https://www.bruzz.be/': Bruzz
 }
