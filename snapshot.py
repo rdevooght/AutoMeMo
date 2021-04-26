@@ -1,11 +1,13 @@
 from selenium import webdriver
 import argparse
 import configparser
+import datetime
 import websites as websites
-from database_and_logging import save_failure
+from database_and_logging import save_failure, make_report
 
 def get_arguments():
     parser = argparse.ArgumentParser()
+    parser.add_argument('--report', nargs='?', default=False, const=True, help='Save a report in a CSV file. Can specify filename (default is reports/YYYY_MM_DD.csv in the logs folder). (no scraping is done, other options are ignored)')
     parser.add_argument('-s', '--screenshot', dest='take_screenshot', default=False, action='store_true', help='Take a screenshot of the page')
     parser.add_argument('-a', '--archive', dest='save_archive', default=False, action='store_true', help='Save a full archive of the page')
     parser.add_argument('--defaults', dest='default_websites', default=False, action='store_true', help='Add all default websites to the list of urls')
@@ -16,6 +18,17 @@ def main():
     config = configparser.ConfigParser()
     config.read('config.ini')
     args = get_arguments()
+
+    if args.report:
+        report = make_report()
+        if args.report == True:
+            today = datetime.date.today()
+            filename = config['DEFAULT']['logs_folder']+'reports/'+datetime.date.today().strftime("%Y-%m-%d")+'.csv'
+        else:
+            filename = args.report
+        
+        report.to_csv(filename, index=False)
+        return 0
 
     if args.default_websites:
         args.urls += websites.KNOWN_WEBSITES.keys()
